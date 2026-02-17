@@ -1,20 +1,120 @@
-<!doctype html>
-<html lang="de">
+<!DOCTYPE html>
+<html>
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Keine Verbindung</title>
-  <link rel="stylesheet" href="styles.css">
+<meta charset="UTF-8">
+<title>Svenja Drives You Home</title>
+<style>
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: #111;
+    color: white;
+    font-family: Arial, sans-serif;
+  }
+
+  canvas {
+    display: block;
+    margin: auto;
+    background: #222;
+  }
+
+  #score {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 20px;
+  }
+</style>
 </head>
 <body>
-  <div class="wrapper">
-    <div class="message">
-      <h1>Keine Verbindung zum Internet</h1>
-      <p>Es besteht keine Internetverbindung.</p>
-    </div>
-    <canvas id="game" width="800" height="200" aria-label="Dino Spiel"></canvas>
-    <div class="controls">Leertaste / Tippen zum Springen · R zum Neustart</div>
-  </div>
-  <script src="script.js"></script>
+
+<div id="score">Score: 0</div>
+<canvas id="gameCanvas" width="800" height="300"></canvas>
+
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+let car = {
+  x: 50,
+  y: 220,
+  width: 40,
+  height: 40,
+  dy: 0,
+  gravity: 0.6,
+  jumpPower: -12,
+  grounded: true
+};
+
+let obstacles = [];
+let speed = 5;
+let score = 0;
+let gameOver = false;
+
+function spawnObstacle() {
+  obstacles.push({
+    x: canvas.width,
+    y: 230,
+    width: 20,
+    height: 30
+  });
+}
+
+setInterval(spawnObstacle, 1500);
+
+function update() {
+  if (gameOver) return;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Car physics
+  car.dy += car.gravity;
+  car.y += car.dy;
+
+  if (car.y >= 220) {
+    car.y = 220;
+    car.dy = 0;
+    car.grounded = true;
+  }
+
+  // Draw car
+  ctx.fillStyle = "hotpink";
+  ctx.fillRect(car.x, car.y, car.width, car.height);
+
+  // Obstacles
+  ctx.fillStyle = "red";
+  for (let i = 0; i < obstacles.length; i++) {
+    obstacles[i].x -= speed;
+    ctx.fillRect(obstacles[i].x, obstacles[i].y, obstacles[i].width, obstacles[i].height);
+
+    // Collision
+    if (
+      car.x < obstacles[i].x + obstacles[i].width &&
+      car.x + car.width > obstacles[i].x &&
+      car.y < obstacles[i].y + obstacles[i].height &&
+      car.y + car.height > obstacles[i].y
+    ) {
+      gameOver = true;
+      alert("Game Over! Score: " + score);
+      location.reload();
+    }
+  }
+
+  score++;
+  document.getElementById("score").innerText = "Score: " + score;
+
+  requestAnimationFrame(update);
+}
+
+document.addEventListener("keydown", function(e) {
+  if (e.code === "Space" && car.grounded) {
+    car.dy = car.jumpPower;
+    car.grounded = false;
+  }
+});
+
+update();
+</script>
+
 </body>
 </html>
